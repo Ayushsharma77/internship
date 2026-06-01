@@ -1,49 +1,53 @@
+import pandas as pd
 import numpy as np
-
-# Q1: Replace NaN with 0 and interchange 3 rows and 3 columns
-arr = np.array([[6, -8, 73, -110], [np.nan, -8, 0, 94]])
-print("Original array:\n", arr)
-
-arr[np.isnan(arr)] = 0
-print("After replacing NaN with 0:\n", arr)
-
-rows = arr[[0, 1, 0], :]
-print("3 rows interchanged:\n", rows)
-
-cols = arr[:, [0, 1, 2]]
-print("3 columns selected:\n", cols)
+import re
 
 
-# Q2: Move axes of a 3D array to new positions
-arr3d = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
-print("Original shape:", arr3d.shape)
-print("Original array:\n", arr3d)
-
-moved = np.moveaxis(arr3d, 0, 2)
-print("After moveaxis (0 -> 2), shape:", moved.shape)
-print(moved)
+# PART 1: Regex Patterns
 
 
-# Q3: Replace NaN values with average of columns
-arr2 = np.array([[1, np.nan, 3],
-                 [4, 5, np.nan],
-                 [7, 8, 9]], dtype=float)
-print("Original array:\n", arr2)
+email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+mobile_pattern = r'^[6-9]\d{9}$'
+string_pattern = r'^[a-zA-Z\s]+$'
 
-col_mean = np.nanmean(arr2, axis=0)
-print("Column averages:", col_mean)
+test_email = "test.user@email.com"
+test_mobile = "9876543210"
+test_string = "Hello World"
 
-for j in range(arr2.shape[1]):
-    for i in range(arr2.shape[0]):
-        if np.isnan(arr2[i, j]):
-            arr2[i, j] = col_mean[j]
-
-print("After replacing NaN with column mean:\n", arr2)
+print("Email Valid:", bool(re.match(email_pattern, test_email)))
+print("Mobile Valid:", bool(re.match(mobile_pattern, test_mobile)))
+print("String Valid:", bool(re.match(string_pattern, test_string)))
 
 
-# Q4: Replace negative values with zero
-arr4 = np.array([3, -1, -7, 5, -2, 8])
-print("Original array:", arr4)
 
-arr4[arr4 < 0] = 0
-print("After replacing negatives with 0:", arr4)
+# PART 2 & 3: Pandas Datetime & CSV Analysis
+
+
+df = pd.read_csv('sales_data.csv')
+
+df['Date'] = pd.to_datetime(df['Date'])
+
+df['Year'] = df['Date'].dt.year
+df['Month'] = df['Date'].dt.month
+df['Day'] = df['Date'].dt.day
+df['Day_of_Week'] = df['Date'].dt.day_name()
+
+print(df.isnull().sum())
+
+df['Revenue'] = df['Revenue'].fillna(df['Revenue'].mean())
+df['Units'] = df['Units'].fillna(0)
+df = df.dropna(subset=['Date'])
+
+df['Total_Cost'] = df['Units'] * df['Price']
+df['Profit'] = df['Revenue'] - df['Total_Cost']
+
+monthly_revenue = df.groupby('Month')['Revenue'].sum()
+print(monthly_revenue)
+
+total_profit = df['Profit'].sum()
+print("Total Profit:", total_profit)
+
+average_units = np.mean(df['Units'])
+print("Average Units Sold:", average_units)
+
+df.to_csv('cleaned_sales_data.csv', index=False)
